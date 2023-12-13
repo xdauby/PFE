@@ -68,6 +68,13 @@ class CP:
             z = np.sign(z_temp) * np.minimum(np.abs(z_temp), self.beta)
             x_old = x
             x_temp = x_old - self.tau * HT(z)[0]
+            
+            # Approximate minimum of 1/2 ||Ax - b||²_w + (1/2) * (1/tau) * ||x - x_temp||² 
+            # by noting g(.|x_n) the SPS for 1/2 ||Ax - b||²_w and h(.|x_n) the SPS for (1/2)||x - x_temp||² 
+            # we try to find the minimu of g(.|x_n) + (1/tau) * h(.|x_n)
+            # where g(x|x_n) = (1/2) * ||x - ( (x_n) - (D_rer)^{-1} (AT(A(x_n) - b)) ||²_(D_rec)
+            # (what about w?)
+            # and h(x|x_n) = (1/2) * ||x - ( (x_n) - (x_n - x_temp) ||²_(Id) = || x - x_temp ||²
 
             for _ in range(self.n_inner_iter):
                 x_rec = x - AT(A(x) - b) / D_rec
