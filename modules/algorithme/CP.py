@@ -64,8 +64,12 @@ class CP:
             if on_display:
                 self.display(x, i)
 
+
+            # compute first proximal prox_sigma_h*
             z_temp = z + self.sigma * H(xbar)[0]
             z = np.sign(z_temp) * np.minimum(np.abs(z_temp), self.beta)
+            
+            # compute second proximal prox_tau_g
             x_old = x
             x_temp = x_old - self.tau * HT(z)[0]
             
@@ -81,6 +85,7 @@ class CP:
                 x = (D_rec * x_rec + x_temp / self.tau) / (D_rec + 1 / self.tau)
                 x = np.maximum(x, 0)
 
+            # extrapolation
             xbar = x + self.theta * (x - x_old)
 
         return x
