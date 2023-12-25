@@ -1,16 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from modules.operators.Operator import Operator
+from typing import Tuple
 
+class TotalVariation(Operator):
 
-class TotalVariation:
-
-    def __init__(self, weight='standard', sign='-'):
+    def __init__(self, weight : str = 'standard', 
+                 sign : str = '-', 
+                 max_norm_iter : int = 100) -> None:
 
         self.weight = weight
         self.sign = sign
+        self.max_norm_iter = max_norm_iter
 
-
-    def transform(self, x):
+    def transform(self, x : np.array) -> np.array:
 
         list_vals = [0, 1, -1]
         vect = np.array([[i, j] for i in list_vals for j in list_vals if not (i == 0 and j == 0)])
@@ -27,9 +30,9 @@ class TotalVariation:
             if self.weight == 'standard':
                 Dx[:, :, i] = omega[i] * (x + factor * np.roll(np.roll(x, shift_vect[0], axis=0), shift_vect[1], axis=1))
         
-        return Dx, omega
+        return Dx
 
-    def transposed_transform(self, y):
+    def transposed_transform(self, y : np.array) -> np.array:
 
         list_vals = [0, 1, -1]
         vect = np.array([[i, j] for i in list_vals for j in list_vals if not (i == 0 and j == 0)])
@@ -47,5 +50,16 @@ class TotalVariation:
             if self.weight == 'standard':
                 im += omega[i] * (y[:, :, i] + factor * im_shifted)
 
-        return im, omega
+        return im
     
+    def norm(self, M : int, N : int) -> float:
+        x, s = np.random.rand(M, N), 0
+        for _ in range(self.max_norm_iter):
+            x, s = self.norm_one_step(x, s)
+        return s
+
+    def norm_one_step(self, x : np.array, s : float) -> Tuple[np.array, float]:
+        x = self.transposed_transform(self.transform(x))
+        x = x / np.sqrt(np.sum(x**2))
+        s = np.sqrt(np.sum(np.sum(np.sum(self.transform(x)**2))))
+        return x, s

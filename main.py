@@ -3,41 +3,52 @@ import astra
 import matplotlib.pyplot as plt
 import numpy as np
 import astra.creators
-from modules.algorithme.CP import CP
+from modules.algorithme.ChambollePock import ChambollePock
 from modules.operators.TotalVariation import TotalVariation
-
-phantom = scipy.io.loadmat('XCAT2D_PETCT.mat')
-
+from modules.operators.Projection import Projection
+phantom = scipy.io.loadmat('data/XCAT2D_PETCT.mat')
 xtrue = phantom['mu_120']
+
+# setup Astra projector
 N = xtrue.shape[0]
 pixel_size = 1
-
 angles = np.arange(0, np.pi + 0.001, 0.06)
-detector_width = 1 ;
+detector_width = 1 
 
-vol_geom = astra.creators.create_vol_geom(N, N);
-proj_geom = astra.creators.create_proj_geom('parallel', detector_width, N, angles);
-proj_id = astra.creators.create_projector('linear', proj_geom, vol_geom);
+vol_geom = astra.creators.create_vol_geom(N, N)
+proj_geom = astra.creators.create_proj_geom('parallel', detector_width, N, angles)
+proj_id = astra.creators.create_projector('linear', proj_geom, vol_geom)
 
-# generating the projection
-sinogram_id, b = astra.creators.create_sino(xtrue,proj_id)
+# generating projection
+sinogram_id, b = astra.creators.create_sino(xtrue, proj_id)
 
-A = lambda x: astra.creators.create_sino(x, proj_id)[1]
-AT = lambda y: astra.creators.create_backprojection(y, proj_id)[1]
 
+# params for ChambollePock Algorithm, solving : || Ax - b ||^2_2 + || Hx ||_1
+
+# tv.transform represents H and projection.transposed_transform represents HT
 tv = TotalVariation()
+# projection.transform represents A and projection.transposed_transform represents AT
+projection = Projection(proj_id)
+max_iter = 100
+max_inner_iter = 10
+beta = 0.5e-1
+theta = 1
+L = tv.norm(N,N)
+sigma = 0.99 * (1e4 / (np.sqrt(1e4 * 1) * L))
+tau = 0.99 * (1 / (np.sqrt(1e4 * 1) * L))
 
-cp = CP(dim_image=N, 
-        n_iter=100, 
-        n_inner_iter=10, 
-        n_norm_iter=100, 
-        beta=0.5e-1, 
-        theta=1,
-        sigma=1e4, 
-        tau=1, 
-        operator=tv)
+# initialize ChambollePock Algorithm
+chambolle_pock = ChambollePock(dim_image=N, 
+                                max_iter=max_iter, 
+                                max_inner_iter=max_inner_iter, 
+                                beta=beta, 
+                                theta=theta,
+                                sigma=sigma, 
+                                tau=tau, 
+                                penalty_operator=tv)
 
-cp.descent(b, A, AT)
+# solve Ax = b with ChambollePock Algorithm
+chambolle_pock.solve(b, projection)
 
 
 
