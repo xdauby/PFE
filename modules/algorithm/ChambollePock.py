@@ -1,7 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from modules.algorithme.IterativeAlgorithm import IterativeAlgorithm
+from modules.algorithm.IterativeAlgorithm import IterativeAlgorithm
 from modules.operators.Operator import Operator
 
 

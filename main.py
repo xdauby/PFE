@@ -3,7 +3,7 @@ import astra
 import matplotlib.pyplot as plt
 import numpy as np
 import astra.creators
-from modules.algorithme.ChambollePock import ChambollePock
+from modules.algorithm.ChambollePock import ChambollePock
 from modules.operators.TotalVariation import TotalVariation
 from modules.operators.Projection import Projection
 phantom = scipy.io.loadmat('data/XCAT2D_PETCT.mat')
