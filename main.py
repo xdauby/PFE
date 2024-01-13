@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import astra.creators
 from modules.algorithm.ChambollePock import ChambollePock
+from modules.algorithm.ConjugateGradient import ConjugateGradient
 from modules.operators.TotalVariation import TotalVariation
 from modules.operators.Projection import Projection
 phantom = scipy.io.loadmat('data/XCAT2D_PETCT.mat')
@@ -12,7 +13,7 @@ xtrue = phantom['mu_120']
 # setup Astra projector
 N = xtrue.shape[0]
 pixel_size = 1
-angles = np.arange(0, np.pi + 0.001, 0.06)
+angles = np.linspace(0, np.pi, num=52)
 detector_width = 1 
 
 vol_geom = astra.creators.create_vol_geom(N, N)
@@ -22,6 +23,9 @@ proj_id = astra.creators.create_projector('linear', proj_geom, vol_geom)
 # generating projection
 sinogram_id, b = astra.creators.create_sino(xtrue, proj_id)
 
+plt.imshow(b, cmap='gray')
+plt.pause(100)
+print(b.shape)
 
 # params for ChambollePock Algorithm, solving : || Ax - b ||^2_2 + || Hx ||_1
 
@@ -36,6 +40,9 @@ theta = 1
 L = tv.norm(N,N)
 sigma = 0.99 * (1e4 / (np.sqrt(1e4 * 1) * L))
 tau = 0.99 * (1 / (np.sqrt(1e4 * 1) * L))
+
+# cg = ConjugateGradient(100)
+# cg.solve(projection.transposed_transform(b), np.zeros((N, N)) , projection)
 
 # initialize ChambollePock Algorithm
 chambolle_pock = ChambollePock(dim_image=N, 
