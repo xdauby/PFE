@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import astra.creators
 from modules.algorithm.ChambollePock import ChambollePock
-from modules.algorithm.ConjugateGradient import ConjugateGradient
 from modules.operators.TotalVariation import TotalVariation
 from modules.operators.Projection import Projection
 
@@ -38,7 +37,7 @@ sinogram_id, b = astra.creators.create_sino(xtrue, proj_id)
 tv = TotalVariation()
 # projection.transform represents A and projection.transposed_transform represents AT
 projection = Projection(proj_id)
-max_iter = 30
+max_iter = 100
 max_inner_iter = 10
 beta = 0.5e-1
 theta = 1
