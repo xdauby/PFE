@@ -65,7 +65,7 @@ class ChambollePock(IterativeAlgorithm):
         self.initialize(b, projection)
         while self.iterations < self.max_iter:
             self.one_step()
-            self.display(self.get_result(), self.iterations)
+            # self.display(self.get_result(), self.iterations)
             self.iterations += 1
         return self.get_result()
 
