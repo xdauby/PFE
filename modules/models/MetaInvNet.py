@@ -37,11 +37,12 @@ class MetaInvLOneIter(nn.Module):
     # One iteration of the HQS-CG algorithm
     def __init__(self):
         super(MetaInvLOneIter, self).__init__()
-        self.CGInitDnCNN = DnCNN(depth=6, n_channels=8, in_chan=1, out_chan=1, add_bias=True)
         self.CG = ConjugateGradient(10)
+        self.CGInitDnCNN = DnCNN(depth=6, n_channels=8, in_chan=1, out_chan=1, add_bias=True)
+
 
     def forward(self, Y, xk_L, zk, lam_over_gamma , gamma, projection, wavelet):
-
+    
         xkp1_0 = xk_L + self.CGInitDnCNN(xk_L)
         AtY = projection.transposed_transform(Y)
 
@@ -67,7 +68,7 @@ class MetaInvNetL(nn.Module):
         self.radon = radon
         self.wavelet = wavelet
         self.unrolled_net = nn.ModuleList()
-        for i in range(self.layers):
+        for i in range(self.layers + 1):
             self.unrolled_net.append(MetaInvLOneIter())
         
 
@@ -76,10 +77,10 @@ class MetaInvNetL(nn.Module):
         xk_list = [None] * (self.layers + 1)
         zk_list = [None] * (self.layers + 1)
 
-        lambak = torch.tensor(np.array(0.005)).float()
-        gammak = torch.tensor(np.array(0.01)).float()
-        delta_lambda = torch.tensor(np.array(0.0008)).float()
-        delta_gamma = torch.tensor(np.array(0.02)).float()
+        lambak = 0.005
+        gammak = 0.01
+        delta_lambda = 0.0008
+        delta_gamma = 0.02
         
         z0 = self.wavelet.transform(xfbp)
         xk_list[0], zk_list[0] = self.unrolled_net[0](y, xfbp, z0, lambak, gammak, self.radon, self.wavelet)

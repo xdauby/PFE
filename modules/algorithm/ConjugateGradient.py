@@ -49,7 +49,7 @@ class ConjugateGradient(IterativeAlgorithm):
         self.initialize(residual, xk, lam, projection, wavelet)
         while self.iterations < self.max_iter:
             self.one_step()
-            self.display(self.get_result(), self.iterations)
+            # self.display(self.get_result(), self.iterations)
             self.iterations += 1
         return self.get_result()
 
