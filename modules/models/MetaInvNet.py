@@ -37,21 +37,21 @@ class MetaInvLOneIter(nn.Module):
     # One iteration of the HQS-CG algorithm
     def __init__(self):
         super(MetaInvLOneIter, self).__init__()
-        self.CG = ConjugateGradient(10)
         self.CGInitDnCNN = DnCNN(depth=6, n_channels=8, in_chan=1, out_chan=1, add_bias=True)
 
 
     def forward(self, Y, xk_L, zk, lam_over_gamma , gamma, projection, wavelet):
-    
+
+        cg = ConjugateGradient(10)
         xkp1_0 = xk_L + self.CGInitDnCNN(xk_L)
         AtY = projection.transposed_transform(Y)
 
         gammaWtzk = gamma * wavelet.transposed_transform(zk)
         AtAxkp1_0 = projection.transposed_transform(projection.transform(xkp1_0))
-        Wtwxkp1_0 = wavelet.transposed_transform(wavelet.transform(xkp1_0))
-        residual = (AtAxkp1_0 + Wtwxkp1_0) - (AtY + gammaWtzk)
+        gammaWtwxkp1_0 = gamma * wavelet.transposed_transform(wavelet.transform(xkp1_0))
+        residual =  (AtY + gammaWtzk) - (AtAxkp1_0 + gammaWtwxkp1_0)
         # conjugate gradient
-        xkp1_L = self.CG.solve(residual, xkp1_0, gamma, projection, wavelet)
+        xkp1_L = cg.solve(residual, xkp1_0, gamma, projection, wavelet)
 
         # soft tresholding
         Wxkp1_L = wavelet.transform(xkp1_L)
@@ -68,6 +68,8 @@ class MetaInvNetL(nn.Module):
         self.radon = radon
         self.wavelet = wavelet
         self.unrolled_net = nn.ModuleList()
+        #self.lambak = nn.Parameter(torch.Tensor([0.001]).cuda(), requires_grad=True).cuda()
+        #self.gammak = nn.Parameter(torch.Tensor([100]).cuda(), requires_grad=True).cuda() 
         for i in range(self.layers + 1):
             self.unrolled_net.append(MetaInvLOneIter())
         
@@ -77,17 +79,17 @@ class MetaInvNetL(nn.Module):
         xk_list = [None] * (self.layers + 1)
         zk_list = [None] * (self.layers + 1)
 
-        lambak = 0.005
-        gammak = 0.01
-        delta_lambda = 0.0008
-        delta_gamma = 0.02
+        lambak = 0.001
+        gammak = 10
+        #delta_lambda = 0.0008
+        #delta_gamma = 0.02
         
         z0 = self.wavelet.transform(xfbp)
         xk_list[0], zk_list[0] = self.unrolled_net[0](y, xfbp, z0, lambak, gammak, self.radon, self.wavelet)
 
         for i in range(self.layers):
-            lambak -= delta_lambda
-            gammak -= delta_gamma
+            #lambak -= delta_lambda
+            #gammak -= delta_gamma
             xk_list[i+1], zk_list[i+1] = self.unrolled_net[i+1](y, xk_list[i], zk_list[i], lambak, gammak, self.radon, self.wavelet)
       
         return xk_list
