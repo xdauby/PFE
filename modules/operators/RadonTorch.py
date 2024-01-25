@@ -17,3 +17,10 @@ class RadonTorch(Operator):
     def transposed_transform(self, y : torch.tensor) -> torch.tensor:
         ATy = self.radon.backward(y)
         return ATy
+
+    def fbp(self, x : torch.tensor) -> torch.tensor:
+        sinogram = self.radon.forward(x)
+        filtered_sinogram = self.radon.filter_sinogram(sinogram)
+        fbp = self.radon.backward(filtered_sinogram)
+        return fbp
+
