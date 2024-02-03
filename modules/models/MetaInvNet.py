@@ -79,8 +79,8 @@ class MetaInvNetL(nn.Module):
         xk_list = [None] * (self.layers + 1)
         zk_list = [None] * (self.layers + 1)
 
-        lambak = 0.001
-        gammak = 10
+        lambak = 0.005 #0.001
+        gammak = 200 #10
         #delta_lambda = 0.0008
         #delta_gamma = 0.02
         
