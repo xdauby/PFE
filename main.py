@@ -33,13 +33,13 @@ print(b.shape)
 tv = TotalVariation()
 # projection.transform represents A and projection.transposed_transform represents AT
 projection = Projection(proj_id)
-max_iter = 100
-max_inner_iter = 10
-beta = 0.5e-1
+max_iter = 1200
+max_inner_iter = 3
+beta = 3e2
 theta = 1
 L = tv.norm(N,N)
-sigma = 0.99 * (1e4 / (np.sqrt(1e4 * 1) * L))
-tau = 0.99 * (1 / (np.sqrt(1e4 * 1) * L))
+sigma = 0.99 * (1e8 / (np.sqrt(1e8 * 1) * L))
+tau = 0.99 * (1 / (np.sqrt(1e8 * 1) * L))
 
 # cg = ConjugateGradient(100)
 # cg.solve(projection.transposed_transform(b), np.zeros((N, N)) , projection)
