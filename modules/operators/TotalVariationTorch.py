@@ -1,5 +1,5 @@
-
 import torch
+from math import sqrt
 
 class TotalVariationTorch:
 
@@ -33,3 +33,16 @@ class TotalVariationTorch:
         x8 = (1/sqrt(2)) * (x[:,7:8,:,:] - torch.roll(x[:,7:8,:,:], shifts=(1, 1), dims=(2, 3)))
         
         return x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8
+
+    def norm(self, M : int, N : int) -> float:
+        x, s = torch.rand(1,1,M, N), 0
+        for _ in range(50):
+            x, s = self.norm_one_step(x, s)
+        return s
+
+    def norm_one_step(self, x, s):
+        x = self.transposed_transform(self.transform(x))
+        x = x / torch.norm(x)
+        s = torch.norm(self.transform(x))
+        return x, s
+

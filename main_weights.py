@@ -1,3 +1,6 @@
+import os
+import s3fs
+
 import scipy.io
 import astra
 import matplotlib.pyplot as plt
@@ -12,6 +15,26 @@ from modules.operators.Projection import Projection
 
 phantom = scipy.io.loadmat('data/XCAT2D_PETCT.mat')
 xtrue = phantom['mu_120']
+
+# connection to database
+S3_ENDPOINT_URL = "https://" + os.environ["AWS_S3_ENDPOINT"]
+fs = s3fs.S3FileSystem(client_kwargs={'endpoint_url': S3_ENDPOINT_URL})
+
+BUCKET_X_TRUE_TEST = "clemphg/x_true_test"
+x_true_test_filenames = fs.ls(BUCKET_X_TRUE_TEST)[1:]
+
+# load data
+def import_data(file_paths):
+    data = []
+    for file_path in file_paths:
+        with fs.open(file_path, mode="rb") as file_in:
+            data.append(np.load(file_in, encoding="bytes"))
+    return data
+    
+x_true_test = import_data(x_true_test_filenames)
+
+# select image 
+xtrue = x_true_test[55]
 
 # setup Astra projector
 N = xtrue.shape[0]
@@ -29,6 +52,9 @@ sinogram_id, b = astra.creators.create_sino(xtrue, proj_id)
 #plt.imshow(b, cmap='gray')
 #plt.pause(100)
 print(b.shape)
+plt.imsave('sino_astra.png', b, cmap='gray')
+np.save('sino_astra.npy', b)
+
 
 #plt.imsave('sinogram.png', b, cmap='gray')
 
@@ -39,21 +65,21 @@ print(b.shape)
 tv = TotalVariation()
 # projection.transform represents A and projection.transposed_transform represents AT
 projection = Projection(proj_id)
-max_iter = 100
-max_inner_iter = 10
-beta = 0.5e-1
+max_iter = 1200
+max_inner_iter = 3
+beta = 3e2
 theta = 1
 L = tv.norm(N,N)
-sigma = 0.99 * (1e4 / (np.sqrt(1e4 * 1) * L))
-tau = 0.99 * (1 / (np.sqrt(1e4 * 1) * L))
-
-print("L:", L)
+sigma = 0.99 * (1e8 / (np.sqrt(1e8 * 1) * L))
+tau = 0.99 * (1 / (np.sqrt(1e8 * 1) * L))
 
 I = 3e5
 bckg = 0 
 
-ybar = I*np.exp(-b) + bckg ;
-y = np.random.poisson(ybar) ;
+ybar = I*np.exp(-b) + bckg
+y = np.random.poisson(ybar)
+#plt.imsave('noisy_sino_astra.png', y, cmap='gray')
+
 
 #plt.imsave('noisy_sinogram.png', y, cmap='gray')
 
