@@ -62,14 +62,14 @@ class MetaInvLOneIter(nn.Module):
 
 
 class MetaInvNetL(nn.Module):
-    def __init__(self, layers, radon : Operator, wavelet : Operator):
+    def __init__(self, layers, radon : Operator, wavelet : Operator, lam, gam):
         super(MetaInvNetL,self).__init__()
         self.layers = layers
         self.radon = radon
         self.wavelet = wavelet
         self.unrolled_net = nn.ModuleList()
-        #self.lambak = nn.Parameter(torch.Tensor([0.001]).cuda(), requires_grad=True).cuda()
-        #self.gammak = nn.Parameter(torch.Tensor([100]).cuda(), requires_grad=True).cuda() 
+        self.lam = lam
+        self.gam = gam
         for i in range(self.layers + 1):
             self.unrolled_net.append(MetaInvLOneIter())
         
@@ -78,18 +78,11 @@ class MetaInvNetL(nn.Module):
         
         xk_list = [None] * (self.layers + 1)
         zk_list = [None] * (self.layers + 1)
-
-        lambak = 0.005 #0.001
-        gammak = 200 #10
-        #delta_lambda = 0.0008
-        #delta_gamma = 0.02
         
         z0 = self.wavelet.transform(xfbp)
-        xk_list[0], zk_list[0] = self.unrolled_net[0](y, xfbp, z0, lambak, gammak, self.radon, self.wavelet)
+        xk_list[0], zk_list[0] = self.unrolled_net[0](y, xfbp, z0, self.lam, self.gam, self.radon, self.wavelet)
 
         for i in range(self.layers):
-            #lambak -= delta_lambda
-            #gammak -= delta_gamma
-            xk_list[i+1], zk_list[i+1] = self.unrolled_net[i+1](y, xk_list[i], zk_list[i], lambak, gammak, self.radon, self.wavelet)
+            xk_list[i+1], zk_list[i+1] = self.unrolled_net[i+1](y, xk_list[i], zk_list[i], self.lam, self.gam, self.radon, self.wavelet)
       
         return xk_list
