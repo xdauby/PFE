@@ -62,7 +62,7 @@ class MetaInvLOneIter(nn.Module):
 
 
 class MetaInvNetL(nn.Module):
-    def __init__(self, layers, radon : Operator, wavelet : Operator, lam, gam):
+    def __init__(self, layers, radon : Operator, wavelet : Operator, lam : float, gam : float):
         super(MetaInvNetL,self).__init__()
         self.layers = layers
         self.radon = radon
